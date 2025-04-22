@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Upload Portal</title>
+</head>
+<body>
+  <h1>Upload Your Video</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="videoFile" accept="video/*">
+    <button type="button" onclick="uploadVideo()">Upload</button>
+  </form>
+  
+  <script>
+    async function uploadVideo() {
+      const fileInput = document.getElementById('videoFile');
+      const formData = new FormData();
+      formData.append('video', fileInput.files[0]);
+
+      const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+      alert(result.message);
+    }
+  </script>
+</body>
+</html>
