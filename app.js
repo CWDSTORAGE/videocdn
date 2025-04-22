@@ -5,37 +5,35 @@ require('dotenv').config();
 
 const app = express();
 const git = simpleGit();
-const PORT = process.env.PORT || 3000;
+const repoUrl = `https://github.com/CWDSTORAGE/videocdn.git`;
 
-// Configure Multer for uploads (100MB limit)
+// Configure Multer for file uploads (100MB limit)
 const storage = multer.diskStorage({
   destination: './uploads',
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
+    cb(null, Date.now() + '-' + file.originalname); // Unique filenames
   }
 });
-const upload = multer({ storage, limits: { fileSize: 100 * 1024 * 1024 } });
+const upload = multer({ storage, limits: { fileSize: 100 * 1024 * 1024 } }); // 100MB limit
 
-// Route: Upload Video & Commit to GitHub
+// Route: Upload File to Repository
 app.post('/upload', upload.single('video'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).send('File upload failed.');
-  }
-
   const filePath = `uploads/${req.file.filename}`;
 
   try {
+    // Add and commit the file to Git repo
     await git.add(filePath);
-    await git.commit(`Added new video: ${req.file.filename}`);
-    await git.push();
-    
-    res.send({ message: 'Video uploaded & committed to repository!', file: req.file.filename });
+    await git.commit(`Added video: ${req.file.filename}`);
+    await git.push(repoUrl); // Push to GitHub
+    res.send({ message: 'Video uploaded and pushed to GitHub!', file: req.file.filename });
   } catch (error) {
-    res.status(500).send('Error pushing file to GitHub.');
+    console.error('Error pushing file to repository:', error);
+    res.status(500).send('Failed to upload video.');
   }
 });
 
 // Route: Test Server
-app.get('/', (req, res) => res.send('Backend is running!'));
+app.get('/', (req, res) => res.send('Proxy backend running!'));
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start the server
+app.listen(process.env.PORT || 3000, () => console.log('Server is live'));
